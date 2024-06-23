@@ -41,4 +41,37 @@ fn part_1() {
 
 fn part_2() {
     let input = fs::read_to_string("./day-5/input.txt").unwrap();
+    let result = input.lines().fold(0, |acc, elem| {
+        let mut has_valid_pairs = false;
+        let mut history: Vec<String> = Vec::new();
+        let mut last_char = ' ';
+        let mut antepenultimate_char = ' ';
+        let mut allowed = false;
+
+        for c in elem.chars() {
+            let pair = format!("{}{}", last_char, c);
+            if history.last().unwrap_or(&String::new()) != &pair {
+                if history.contains(&pair) {
+                    has_valid_pairs = true;
+                } else {
+                    history.push(pair);
+                }
+            }
+
+            if antepenultimate_char == c && last_char != c {
+                allowed = true;
+            }
+
+            antepenultimate_char = last_char;
+            last_char = c;
+        }
+
+        if allowed && has_valid_pairs {
+            acc + 1
+        } else {
+            acc
+        }
+    });
+
+    println!("Part 2 result: {}", result);
 }
