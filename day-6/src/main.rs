@@ -40,14 +40,20 @@ fn detect_action(line: &str) -> Action {
     }
 }
 
+enum Part {
+    Part1,
+    Part2,
+}
+
 fn update_grid(
     grid: &mut [[i32; 1000]; 1000],
     action: Action,
     start_coordinates: [i32; 2],
     end_coordinates: [i32; 2],
+    part: Part,
 ) {
     // Define a closure that determines the new value based on the action
-    let update_value = |current_value: i32| -> i32 {
+    let update_value_part_1 = |current_value: i32| -> i32 {
         match action {
             Action::TurnOn => 1,
             Action::TurnOff => 0,
@@ -61,11 +67,27 @@ fn update_grid(
         }
     };
 
+    let update_value_part_2 = |current_value: i32| -> i32 {
+        match action {
+            Action::TurnOn => current_value + 1,
+            Action::TurnOff => (current_value - 1).max(0),
+            Action::Toggle => current_value + 2,
+        }
+    };
+
     // Single loop structure to apply the action
     for x in start_coordinates[0]..=end_coordinates[0] {
         for y in start_coordinates[1]..=end_coordinates[1] {
             let current_value = grid[x as usize][y as usize];
-            grid[x as usize][y as usize] = update_value(current_value);
+
+            match part {
+                Part::Part1 => {
+                    grid[x as usize][y as usize] = update_value_part_1(current_value);
+                }
+                Part::Part2 => {
+                    grid[x as usize][y as usize] = update_value_part_2(current_value);
+                }
+            }
         }
     }
 }
@@ -85,11 +107,43 @@ fn part_1() {
             .expect("Expected exactly three elements");
         let start_coordinates = parse_coordinates(start_str_coordinates);
         let end_coordinates = parse_coordinates(end_str_coordinates);
-        update_grid(&mut grid, action, start_coordinates, end_coordinates);
+        update_grid(
+            &mut grid,
+            action,
+            start_coordinates,
+            end_coordinates,
+            Part::Part1,
+        );
     }
 
     let result = grid.iter().flatten().fold(0, |acc, elem| acc + elem);
     println!("Part 1 result: {}", result);
 }
 
-fn part_2() {}
+fn part_2() {
+    let input = fs::read_to_string("./day-6/input.txt").unwrap();
+    let mut grid = [[0; 1000]; 1000];
+
+    for (_i, line) in input.lines().enumerate() {
+        let action = detect_action(line);
+        let [start_str_coordinates, _, end_str_coordinates]: [&str; 3] = line
+            .strip_prefix(format!("{} ", action.as_str()).as_str())
+            .unwrap()
+            .split(' ')
+            .collect::<Vec<_>>()
+            .try_into()
+            .expect("Expected exactly three elements");
+        let start_coordinates = parse_coordinates(start_str_coordinates);
+        let end_coordinates = parse_coordinates(end_str_coordinates);
+        update_grid(
+            &mut grid,
+            action,
+            start_coordinates,
+            end_coordinates,
+            Part::Part2,
+        );
+    }
+
+    let result = grid.iter().flatten().fold(0, |acc, elem| acc + elem);
+    println!("Part 2 result: {}", result);
+}
